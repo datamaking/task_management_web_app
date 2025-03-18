@@ -40,6 +40,20 @@ ROOT_URLCONF = 'taskmanager.urls'
 # Enable the Python profiler in Silk
 SILKY_PYTHON_PROFILER = True
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

@@ -11,6 +11,19 @@ import json
 from django.contrib.auth import logout
 from silk.profiling.profiler import silk_profile
 
+
+from .decorators import profile_memory
+
+
+@profile_memory
+def sample_view(request):
+    # Simulate memory consumption by creating a large list
+    large_list = [i * 2 for i in range(1000000)]
+    context = {
+        'list_length': len(large_list)
+    }
+    return render(request, 'sample.html', context)
+
 # Custom decorator for role-based access control
 def role_required(roles=[]):
     def decorator(view_func):
