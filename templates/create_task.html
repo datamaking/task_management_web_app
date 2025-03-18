@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Create New Task</h1>
+    <a href="{% url 'task_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Task List
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-plus-circle me-2"></i> Task Details
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" name="title" id="title" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="category" class="form-label">Category</label>
+                    <select name="category" id="category" class="form-select" required>
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                            {% if category.parent %}
+                                <option value="{{ category.id }}">{{ category.parent.name }} &gt; {{ category.name }}</option>
+                            {% else %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select" required>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select name="priority" id="priority" class="form-select" required>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="assigned_to" class="form-label">Assigned To</label>
+                    <select name="assigned_to" id="assigned_to" class="form-select" required>
+                        <option value="">Select a user</option>
+                        {% for user_obj in users %}
+                            <option value="{{ user_obj.id }}" {% if user_obj.id == user.id and user_role == 'user' %}selected{% endif %}>
+                                {{ user_obj.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="due_date" class="form-label">Due Date</label>
+                    <input type="datetime-local" name="due_date" id="due_date" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea name="description" id="description" class="form-control" rows="5" required></textarea>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Create Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

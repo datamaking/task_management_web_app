@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<!-- Task Summary Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Tasks</h5>
+                <h2 class="card-text">{{ total_tasks }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Pending Tasks</h5>
+                <h2 class="card-text">{{ pending_tasks }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">In Progress</h5>
+                <h2 class="card-text">{{ in_progress_tasks }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Completed</h5>
+                <h2 class="card-text">{{ completed_tasks }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Tasks by Priority
+            </div>
+            <div class="card-body">
+                <canvas id="priorityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Tasks by Category
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts for Admin/Manager -->
+{% if user_role == 'admin' or user_role == 'manager' %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                Tasks by User
+            </div>
+            <div class="card-body">
+                <canvas id="userChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Tasks Table -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                Recent Tasks
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Assigned To</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in recent_tasks %}
+                            <tr>
+                                <td>{{ task.title }}</td>
+                                <td>
+                                    {% if task.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif task.status == 'in_progress' %}
+                                    <span class="badge bg-info">In Progress</span>
+                                    {% elif task.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.priority == 'low' %}
+                                    <span class="badge bg-success">Low</span>
+                                    {% elif task.priority == 'medium' %}
+                                    <span class="badge bg-info">Medium</span>
+                                    {% elif task.priority == 'high' %}
+                                    <span class="badge bg-warning">High</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ task.due_date|date:"M d, Y" }}</td>
+                                <td>{{ task.assigned_to.username }}</td>
+                                <td>
+                                    <a href="{% url 'edit_task' task.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No tasks found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Priority Chart
+    const priorityData = {{ tasks_by_priority|safe }};
+    const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+    const priorityChart = new Chart(priorityCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Urgent'],
+            datasets: [{
+                data: [priorityData.low, priorityData.medium, priorityData.high, priorityData.urgent],
+                backgroundColor: [
+                    '#28a745', // Green for Low
+                    '#17a2b8', // Blue for Medium
+                    '#ffc107', // Yellow for High
+                    '#dc3545'  // Red for Urgent
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+
+    // Category Chart
+    const categoryData = {{ tasks_by_category|safe }};
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryData.map(item => item.name),
+            datasets: [{
+                label: 'Tasks',
+                data: categoryData.map(item => item.count),
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    {% if user_role == 'admin' or user_role == 'manager' %}
+    // User Chart
+    const userData = {{ tasks_by_user|safe }};
+    const userCtx = document.getElementById('userChart').getContext('2d');
+    const userChart = new Chart(userCtx, {
+        type: 'bar',
+        data: {
+            labels: userData.map(item => item.name),
+            datasets: [{
+                label: 'Tasks Assigned',
+                data: userData.map(item => item.count),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %} 

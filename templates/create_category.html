@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Create Task Category</h1>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-folder-plus me-2"></i> New Category
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Category Name</label>
+                        <input type="text" name="name" id="name" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="parent" class="form-label">Parent Category (Optional)</label>
+                        <select name="parent" id="parent" class="form-select">
+                            <option value="">None (Top-level Category)</option>
+                            {% for category in categories %}
+                                {% if not category.parent %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select a parent category to create a subcategory</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Create Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list me-2"></i> Existing Categories
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for category in categories %}
+                        {% if not category.parent %}
+                            <li class="list-group-item">
+                                <strong>{{ category.name }}</strong>
+                                {% if category.description %}
+                                    <p class="text-muted mb-1">{{ category.description }}</p>
+                                {% endif %}
+                                
+                                {% if category.subcategories.all %}
+                                    <ul class="list-group list-group-flush mt-2">
+                                        {% for subcategory in category.subcategories.all %}
+                                            <li class="list-group-item ps-4">
+                                                <i class="fas fa-level-down-alt me-2"></i> {{ subcategory.name }}
+                                                {% if subcategory.description %}
+                                                    <p class="text-muted mb-0 ps-4">{{ subcategory.description }}</p>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    {% empty %}
+                        <li class="list-group-item text-center">No categories found</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
